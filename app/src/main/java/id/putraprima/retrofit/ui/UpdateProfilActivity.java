@@ -3,7 +3,9 @@ package id.putraprima.retrofit.ui;
 import androidx.appcompat.app.AppCompatActivity;
 import id.putraprima.retrofit.R;
 import id.putraprima.retrofit.api.helper.ServiceGenerator;
+import id.putraprima.retrofit.api.models.ApiError;
 import id.putraprima.retrofit.api.models.Envelope;
+import id.putraprima.retrofit.api.models.ErrorUtils;
 import id.putraprima.retrofit.api.models.UpdateProfilRequest;
 import id.putraprima.retrofit.api.models.UpdateProfilResponse;
 import id.putraprima.retrofit.api.services.ApiInterface;
@@ -41,14 +43,27 @@ public class UpdateProfilActivity extends AppCompatActivity {
         call.enqueue(new Callback<Envelope<UpdateProfilResponse>>() {
             @Override
             public void onResponse(Call<Envelope<UpdateProfilResponse>> call, Response<Envelope<UpdateProfilResponse>> response) {
-                if (response.code() == 200){
-                    Toast.makeText(UpdateProfilActivity.this, "Update Profile Success", Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(UpdateProfilActivity.this, "Update Profile Failed", Toast.LENGTH_SHORT).show();
-                }
+                if (response.isSuccessful()){
                 Intent intent = new Intent();
                 setResult(1, intent);
                 finish();
+            }
+                else{
+                    ApiError error = ErrorUtils.parseError(response);
+                    if(error.getError().getName()!=null && error.getError().getEmail()!=null){
+                        Toast.makeText(UpdateProfilActivity.this, error.getError().getName().get(0) + " and " + error.getError().getEmail().get(0), Toast.LENGTH_SHORT).show();
+                    }
+                    else if(error.getError().getName()!=null){
+                        Toast.makeText(UpdateProfilActivity.this, error.getError().getName().get(0), Toast.LENGTH_SHORT).show();
+                    }
+                    else if(error.getError().getEmail()!=null){
+                        Toast.makeText(UpdateProfilActivity.this, error.getError().getEmail().get(0), Toast.LENGTH_SHORT).show();
+                    }
+                    else if(!Patterns.EMAIL_ADDRESS.matcher(error.getError().getEmail().get(0)).matches()){
+                        Toast.makeText(UpdateProfilActivity.this, error.getError().getEmail().get(0), Toast.LENGTH_SHORT).show();
+                    }
+                }
+
             }
 
             @Override
@@ -63,21 +78,7 @@ public class UpdateProfilActivity extends AppCompatActivity {
         String email = mEmailProfileUpdateText.getText().toString();
         updateProfilRequest = new UpdateProfilRequest(name, email);
 
-        boolean check;
-        if (name.equals("")) {
-            Toast.makeText(this, "Name is Empty!", Toast.LENGTH_SHORT).show();
-            check = false;
-        } else if(email.equals("")) {
-            Toast.makeText(this, "Email is Empty!", Toast.LENGTH_SHORT).show();
-            check = false;
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()){
-            Toast.makeText(this, "Email Not Valid", Toast.LENGTH_SHORT).show();
-            check = false;
-        } else {
-            check = true;
-        }
-        if (check == true) {
+
             doUpdateProfile();
-        }
     }
 }

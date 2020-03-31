@@ -3,7 +3,9 @@ package id.putraprima.retrofit.ui;
 import androidx.appcompat.app.AppCompatActivity;
 import id.putraprima.retrofit.R;
 import id.putraprima.retrofit.api.helper.ServiceGenerator;
+import id.putraprima.retrofit.api.models.ApiError;
 import id.putraprima.retrofit.api.models.Envelope;
+import id.putraprima.retrofit.api.models.ErrorUtils;
 import id.putraprima.retrofit.api.models.UpdatePasswordRequest;
 import id.putraprima.retrofit.api.models.UpdatePasswordResponse;
 import id.putraprima.retrofit.api.services.ApiInterface;
@@ -41,15 +43,26 @@ public class UpdatePasswordActivity extends AppCompatActivity {
         call.enqueue(new Callback<Envelope<UpdatePasswordResponse>>() {
 
             @Override
-            public void onResponse(Call<Envelope<UpdatePasswordResponse>> call, Response<Envelope<UpdatePasswordResponse>> response) {
-                if (response.code() == 200){
-                    Toast.makeText(UpdatePasswordActivity.this, "Update Password BERHASIL", Toast.LENGTH_SHORT).show();
-                }else{
-                    Toast.makeText(UpdatePasswordActivity.this, "Update Password GAGAL", Toast.LENGTH_SHORT).show();
+            public void onResponse(retrofit2.Call<Envelope<UpdatePasswordResponse>> call, Response<Envelope<UpdatePasswordResponse>> response) {
+                if(response.isSuccessful()){
+                    Intent intent = new Intent();
+                    setResult(2, intent);
+                    finish();
                 }
-                Intent intent = new Intent();
-                setResult(2, intent);
-                finish();
+                else{
+                    ApiError error = ErrorUtils.parseError(response);
+                    if(error.getError().getPassword()!=null && error.getError().getConfirmPassword()!=null){
+                        Toast.makeText(UpdatePasswordActivity.this, error.getError().getPassword().get(0) + " and " + error.getError().getConfirmPassword().get(0), Toast.LENGTH_SHORT).show();
+                    }
+                    else if(error.getError().getPassword()!=null){
+                        for (int i=0; i<error.getError().getPassword().size(); i++){
+                            Toast.makeText(UpdatePasswordActivity.this, error.getError().getPassword().get(i), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    else if(error.getError().getConfirmPassword()!=null){
+                        Toast.makeText(UpdatePasswordActivity.this, error.getError().getConfirmPassword().get(0), Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
 
             @Override
@@ -64,26 +77,6 @@ public class UpdatePasswordActivity extends AppCompatActivity {
         String password_confirm = mPasswordPasswordUpdateText.getText().toString();
         updatePasswordRequest = new UpdatePasswordRequest(password, password_confirm);
 
-        boolean check;
-        if (password.equals("")) {
-            Toast.makeText(this, "Password KOSONG!", Toast.LENGTH_SHORT).show();
-            check = false;
-        } else if (password_confirm.equals("")) {
-            Toast.makeText(this, "konfirmasi Password Kosong!", Toast.LENGTH_SHORT).show();
-            check = false;
-        } else if (password.length() < 8) {
-            Toast.makeText(this, "Password limit 8", Toast.LENGTH_SHORT).show();
-            check = false;
-        } else if (!password_confirm.equals(password)) {
-            Toast.makeText(this, "Confirm Password not Same!", Toast.LENGTH_SHORT).show();
-            check = false;
-        } else {
-            check = true;
-        }
-        Toast.makeText(this, "New Password : "+password, Toast.LENGTH_SHORT).show();
-        if (check == true) {
             doUpdatePassword();
-        }
     }
-
 }

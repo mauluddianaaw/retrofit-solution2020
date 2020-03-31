@@ -14,6 +14,8 @@ import android.widget.Toast;
 
 import id.putraprima.retrofit.R;
 import id.putraprima.retrofit.api.helper.ServiceGenerator;
+import id.putraprima.retrofit.api.models.ApiError;
+import id.putraprima.retrofit.api.models.ErrorUtils;
 import id.putraprima.retrofit.api.models.LoginRequest;
 import id.putraprima.retrofit.api.models.LoginResponse;
 import id.putraprima.retrofit.api.services.ApiInterface;
@@ -49,38 +51,56 @@ public class MainActivity extends AppCompatActivity {
     public void handleLoginClick(View view) {
         email = edtEmail.getText().toString();
         password = edtPassword.getText().toString();
-        boolean check;
-        if (email.equals("")){
-            Toast.makeText(this, "Email is Empty!", Toast.LENGTH_SHORT).show();
-            check = false;
-        }else if (password.equals("")){
-            Toast.makeText(this, "Password is Empty!", Toast.LENGTH_SHORT).show();
-            check = false;
-        }else{
-            check = true;
-        }
-        if (check == true) {
-            doLogin();
-        }
+        doLogin();
+        //boolean check;
+        //if (email.equals("")){
+            //Toast.makeText(this, "Email is Empty!", Toast.LENGTH_SHORT).show();
+           // check = false;
+        //}else if (password.equals("")){
+           // Toast.makeText(this, "Password is Empty!", Toast.LENGTH_SHORT).show();
+           // check = false;
+        //}else{
+        //    check = true;
+        //}
+       // if (check == true) {
+            //doLogin();
+       // }
     }
 
     private void doLogin() {
         ApiInterface service = ServiceGenerator.createService(ApiInterface.class);
 
-        LoginRequest loginRequest = new LoginRequest(email,password);
+        LoginRequest loginRequest = new LoginRequest(email, password);
         Call<LoginResponse> call = service.doLogin(loginRequest);
         call.enqueue(new Callback<LoginResponse>() {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
-                if (response.code() == 302) {
-                    Toast.makeText(MainActivity.this, "Login failed, Wrong Username or Password", Toast.LENGTH_SHORT).show();
-                } else if (response.code() == 200) {
+                //if (response.code() == 302) {
+                // Toast.makeText(MainActivity.this, "Login failed, Wrong Username or Password", Toast.LENGTH_SHORT).show();
+                //} else if (response.code() == 200) {
+                // SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                //SharedPreferences.Editor editor = preference.edit();
+                // editor.putString("token", response.body().getToken());
+                //editor.apply();
+                //Intent i = new Intent(getApplicationContext(), ProfileActivity.class);
+                //startActivity(i);
+                if (response.isSuccessful()) {
                     SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     SharedPreferences.Editor editor = preference.edit();
                     editor.putString("token", response.body().getToken());
                     editor.apply();
                     Intent i = new Intent(getApplicationContext(), ProfileActivity.class);
                     startActivity(i);
+                } else {
+                    ApiError error = ErrorUtils.parseError(response);
+
+                    if (error.getError().getEmail() != null && error.getError().getPassword() != null) {
+                        Toast.makeText(MainActivity.this, error.getError().getEmail().get(0) + " and " + error.getError().getPassword().get(0), Toast.LENGTH_LONG).show();
+                    } else if (error.getError().getEmail() != null) {
+                        Toast.makeText(MainActivity.this, error.getError().getEmail().get(0), Toast.LENGTH_SHORT).show();
+                    } else if (error.getError().getPassword() != null) {
+                        Toast.makeText(MainActivity.this, error.getError().getPassword().get(0), Toast.LENGTH_SHORT).show();
+                    }
                 }
                 //SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 //SharedPreferences.Editor editor = preference.edit();
@@ -96,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 
     public void handleRegisterClick(View view) {
         Intent intent = new Intent(this, RegisterActivity.class);
