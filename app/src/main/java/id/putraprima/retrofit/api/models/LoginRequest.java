@@ -7,4 +7,5 @@ public class LoginRequest {
         this.email = email;
         this.password = password;
     }
+
 }
