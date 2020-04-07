@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     public void handleLoginClick(View view) {
         email = edtEmail.getText().toString();
         password = edtPassword.getText().toString();
+       // loginRequest = new LoginRequest(email, password);
         doLogin();
         //boolean check;
         //if (email.equals("")){
@@ -122,5 +123,10 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, RegisterActivity.class);
         startActivity(intent);
 
+    }
+
+    public void handleRecipe(View view) {
+        Intent intent = new Intent(this, RecipeActivity.class);
+        startActivity(intent);
     }
 }

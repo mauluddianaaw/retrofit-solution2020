@@ -45,6 +45,7 @@ public class ServiceGenerator {
         if (!TextUtils.isEmpty(authToken)) {
             httpClient.addInterceptor(new AuthenticationInterceptor(authToken));
         }
+        httpClient.addInterceptor(logging);
         builder.client(httpClient.build());
         retrofit = builder.build();
         return retrofit.create(serviceClass);
