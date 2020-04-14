@@ -14,9 +14,13 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.Button;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -28,6 +32,11 @@ public class RecipeActivity extends AppCompatActivity {
     ArrayList<Recipe> recipe;
     RecipeAdapter adapter;
     private ConstraintLayout mRecipeLayout;
+
+    int page = 2;
+    Button btnLoadMore;
+    ProgressDialog progressDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +52,9 @@ public class RecipeActivity extends AppCompatActivity {
         adapter = new RecipeAdapter(recipe);
         recipeView.setAdapter(adapter);
         mRecipeLayout = findViewById(R.id.recipeLayout);
+        doLoad();
+
+        btnLoadMore = findViewById(R.id.loadMore);
     }
 
     public void doRecipe() {
@@ -77,14 +89,11 @@ public class RecipeActivity extends AppCompatActivity {
 //
     }
     public void doLoad() {
-        //clear dulu baru doRecipe biar gak numpuk
         recipe.clear();
         adapter.notifyDataSetChanged();
 
         doRecipe();
 
-        //kalo gak dikasi delay kecepetan update rv nya
-        //delay 3 detik
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -94,7 +103,49 @@ public class RecipeActivity extends AppCompatActivity {
         }, 3000);
     }
 
-    public void handleLoad(View view) {
-        doLoad();
+    public void handleLoadMore(View view) {
+        progressDialog = new ProgressDialog(RecipeActivity.this);
+        progressDialog.setMessage("Mohon tunggu");
+        progressDialog.show();
+        NextLoad();
+    }
+
+    public void NextLoad() {
+        ApiInterface service = ServiceGenerator.createService(ApiInterface.class);
+        Call<Envelope<List<Recipe>>> call = service.doLoadMore(page++);
+        call.enqueue(new Callback<Envelope<List<Recipe>>>() {
+
+            @Override
+            public void onResponse(Call<Envelope<List<Recipe>>> call, Response<Envelope<List<Recipe>>> response) {
+                if(response.isSuccessful()){
+                    progressDialog.dismiss();
+                    for(int i=0; i<response.body().getData().size(); i++){
+                        int id = response.body().getData().get(i).getId();
+                        String namaResep = response.body().getData().get(i).getNama_resep();
+                        String deskripsi = response.body().getData().get(i).getDeskripsi();
+                        String bahan = response.body().getData().get(i).getBahan();
+                        String langkahPembuatan = response.body().getData().get(i).getLangkah_pembuatan();
+                        String foto = response.body().getData().get(i).getFoto();
+                        recipe.add(new Recipe(id, namaResep, deskripsi, bahan, langkahPembuatan, foto));
+                        adapter.notifyDataSetChanged();
+                    }
+                    Snackbar snackbar = Snackbar.make(mRecipeLayout, "Hore data ditambah", Snackbar.LENGTH_SHORT);
+                    snackbar.show();
+                    btnLoadMore.setActivated(true);
+                }
+                else if(response.errorBody()!=null){
+                    progressDialog.dismiss();
+                    Snackbar snackbar = Snackbar.make(mRecipeLayout, "load data gagal pada page " +page, Snackbar.LENGTH_SHORT);
+                    snackbar.show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Envelope<List<Recipe>>> call, Throwable t) {
+                progressDialog.dismiss();
+                Snackbar snackbar = Snackbar.make(mRecipeLayout, "Gagal koneksi", Snackbar.LENGTH_SHORT);
+                snackbar.show();
+            }
+        });
     }
 }
