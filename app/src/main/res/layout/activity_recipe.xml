@@ -23,7 +23,6 @@
         android:id="@+id/recycleView"
         android:layout_width="350dp"
         android:layout_height="436dp"
-        app:layout_constraintBottom_toTopOf="@+id/button3"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.41"
         app:layout_constraintStart_toStartOf="parent"

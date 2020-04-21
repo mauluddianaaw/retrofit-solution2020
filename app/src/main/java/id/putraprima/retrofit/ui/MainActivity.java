@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                     ApiError error = ErrorUtils.parseError(response);
 
                     if (error.getError().getEmail() != null && error.getError().getPassword() != null) {
-                        Toast.makeText(MainActivity.this, error.getError().getEmail().get(0) + " and " + error.getError().getPassword().get(0), Toast.LENGTH_LONG).show();
+                        Toast.makeText(MainActivity.this, "response message : " + error.getError().getEmail().get(0) + " and " + error.getError().getPassword().get(0), Toast.LENGTH_LONG).show();
                     } else if (error.getError().getEmail() != null) {
                         Toast.makeText(MainActivity.this, error.getError().getEmail().get(0), Toast.LENGTH_SHORT).show();
                     } else if (error.getError().getPassword() != null) {
@@ -125,8 +125,5 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    public void handleRecipe(View view) {
-        Intent intent = new Intent(this, RecipeActivity.class);
-        startActivity(intent);
-    }
+
 }
